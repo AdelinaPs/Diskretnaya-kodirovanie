@@ -1,0 +1,88 @@
+# Импортируем модуль heapq для работы с кучей (heap)
+import heapq
+
+# Определяем класс Node, который будет представлять узлы в дереве Хаффмана
+class Node:
+    # Конструктор класса Node
+    def __init__(self, char, freq):
+        # Сохраняем символ и его частоту
+        self.char = char
+        self.freq = freq
+        # Инициализируем левый и правый дочерние узлы как None
+        self.left = None
+        self.right = None
+
+    # Переопределяем оператор сравнения для сортировки узлов по частоте
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+# Функция для построения дерева Хаффмана
+def build_huffman_tree(freq_dict):
+    # Создаем кучу из узлов, каждый из которых представляет символ и его частоту
+    heap = [Node(char, freq) for char, freq in freq_dict.items()]
+    # Преобразуем список в кучу
+    heapq.heapify(heap)
+    # Пока в куче больше одного элемента
+    while len(heap) > 1:
+        # Извлекаем два узла с наименьшими частотами
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        # Создаем новый узел, объединяющий два узла с наименьшими частотами
+        merged = Node(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
+        # Вставляем новый узел обратно в кучу
+        heapq.heappush(heap, merged)
+    # Возвращаем корень дерева Хаффмана
+    return heap[0]
+
+# Функция для генерации кодов Хаффмана из дерева
+def generate_huffman_codes(node, code='', codes={}):
+    # Если узел пуст, возвращаем текущий словарь кодов
+    if node is None:
+        return codes
+    # Если узел представляет символ, добавляем его в словарь кодов
+    if node.char is not None:
+        codes[node.char] = code
+    # Рекурсивно генерируем коды для левого и правого поддеревьев
+    generate_huffman_codes(node.left, code + '0', codes)
+    generate_huffman_codes(node.right, code + '1', codes)
+    return codes
+
+# Функция для вычисления избыточности кода Хаффмана
+def calculate_redundancy(codes, freq_dict):
+    # Вычисляем общую длину кодированного сообщения
+    total_length = sum(len(code) * freq_dict[char] for char, code in codes.items())
+    # Вычисляем общее количество символов в исходном сообщении
+    total_chars = sum(freq_dict.values())
+    # Вычисляем избыточность как разницу между общим количеством битов и количеством символов
+    redundancy = total_length - total_chars
+    return redundancy
+
+# Главная функция программы
+def main():
+    # Создаем словарь частот символов
+    freq_dict = {
+        ' ': 0.140, 'о': 0.096, 'е': 0.089, 'а': 0.057, 'н': 0.056, 'с': 0.051,
+        'и': 0.050, 'л': 0.049, 'т': 0.047, 'к': 0.039, 'в': 0.036, 'м': 0.032,
+        'р': 0.032, 'у': 0.026, 'б': 0.024, 'ы': 0.024, 'д': 0.019, 'п': 0.019,
+        'ь': 0.019, 'ю': 0.017, 'я': 0.014, 'ч': 0.011, 'ж': 0.010, 'г': 0.008,
+        'з': 0.007, 'й': 0.007, 'ш': 0.007, 'щ': 0.006, 'х': 0.004, 'э': 0.004,
+        'ф': 0.000, 'ц': 0.000, 'ъ': 0.000
+    }
+    # Построение дерева Хаффмана
+    huffman_tree = build_huffman_tree(freq_dict)
+    # Генерация кодов Хаффмана
+    huffman_codes = generate_huffman_codes(huffman_tree)
+    # Вычисление избыточности кода
+    redundancy = calculate_redundancy(huffman_codes, freq_dict)
+
+    # Вывод кодов Хаффмана и избыточности
+    print("Суффиксный код Хаффмана:")
+    for char, code in huffman_codes.items():
+        print(f"{char}: {code}")
+    print(f"Избыточность кода: {redundancy}")
+
+# Запуск главной функции, если скрипт запущен как основной
+if __name__ == "__main__":
+    main()
